@@ -1,59 +1,61 @@
-import { describe, it, expect, vi } from 'vitest';
-import { verifyCognitoToken, verifyCognitoTokenData } from './index';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const vitest_1 = require("vitest");
+const index_1 = require("./index");
 const FAKE_TOKEN = 'this.is.not.a.real.token';
-describe('verifyCognitoToken middleware', () => {
+(0, vitest_1.describe)('verifyCognitoToken middleware', () => {
     const region = 'us-east-1';
     const userPoolId = 'us-east-1_fakepool';
-    const middleware = verifyCognitoToken({ region, userPoolId });
+    const middleware = (0, index_1.verifyCognitoToken)({ region, userPoolId });
     const mockRes = {};
-    it('should return error if Authorization header is missing', () => {
+    (0, vitest_1.it)('should return error if Authorization header is missing', () => {
         const mockReq = {
             headers: {},
         };
-        const next = vi.fn();
+        const next = vitest_1.vi.fn();
         middleware(mockReq, mockRes, next);
-        expect(next).toHaveBeenCalledOnce();
+        (0, vitest_1.expect)(next).toHaveBeenCalledOnce();
         const error = next.mock.calls[0][0];
-        expect(error.message).toMatch(/Missing or invalid Authorization header/i);
+        (0, vitest_1.expect)(error.message).toMatch(/Missing or invalid Authorization header/i);
     });
-    it('should return error if token is malformed', () => {
+    (0, vitest_1.it)('should return error if token is malformed', () => {
         const mockReq = {
             headers: {
                 authorization: 'Bearer FAKE.TOKEN.VALUE',
             },
         };
-        const next = vi.fn();
+        const next = vitest_1.vi.fn();
         middleware(mockReq, mockRes, next);
         // Vì middleware verify dùng async getKey → ta cần test async
         setTimeout(() => {
-            expect(next).toHaveBeenCalledOnce();
+            (0, vitest_1.expect)(next).toHaveBeenCalledOnce();
             const error = next.mock.calls[0][0];
-            expect(error.message).toMatch(/Invalid token/i);
+            (0, vitest_1.expect)(error.message).toMatch(/Invalid token/i);
         }, 100);
     });
 });
-describe('verifyCognitoTokenData()', () => {
-    it('should throw if token is invalid format', async () => {
+(0, vitest_1.describe)('verifyCognitoTokenData()', () => {
+    (0, vitest_1.it)('should throw if token is invalid format', async () => {
         try {
-            await verifyCognitoTokenData(FAKE_TOKEN, 'us-east-1', 'us-east-1_fakepool');
+            await (0, index_1.verifyCognitoTokenData)(FAKE_TOKEN, 'us-east-1', 'us-east-1_fakepool');
         }
         catch (err) {
-            expect(err).toBeInstanceOf(Error);
-            expect(err.message).toMatch(/Invalid token/);
+            (0, vitest_1.expect)(err).toBeInstanceOf(Error);
+            (0, vitest_1.expect)(err.message).toMatch(/Invalid token/);
         }
     });
-    it('should throw if token has no kid in header', async () => {
+    (0, vitest_1.it)('should throw if token has no kid in header', async () => {
         const tokenWithoutKid = [
             Buffer.from(JSON.stringify({ alg: 'RS256' })).toString('base64url'),
             Buffer.from(JSON.stringify({ sub: '123', token_use: 'access' })).toString('base64url'),
             'signature',
         ].join('.');
         try {
-            await verifyCognitoTokenData(tokenWithoutKid, 'us-east-1', 'us-east-1_fakepool');
+            await (0, index_1.verifyCognitoTokenData)(tokenWithoutKid, 'us-east-1', 'us-east-1_fakepool');
         }
         catch (err) {
-            expect(err).toBeInstanceOf(Error);
-            expect(err.message).toMatch(/no kid/);
+            (0, vitest_1.expect)(err).toBeInstanceOf(Error);
+            (0, vitest_1.expect)(err.message).toMatch(/no kid/);
         }
     });
     // Optional: test real token (if has real accessToken)

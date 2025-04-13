@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest"
+    "test": "vitest run packages/src"
   },
   "keywords": [],
   "author": "",
