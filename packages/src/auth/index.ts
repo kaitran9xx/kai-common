@@ -50,3 +50,50 @@ export function verifyCognitoToken(config?: CognitoConfig) {
     });
   };
 }
+
+type DecodedAccessToken = {
+  sub: string;
+  username: string;
+  email?: string;
+  'cognito:groups'?: string[];
+  [key: string]: any;
+};
+
+export async function verifyCognitoTokenData(
+  token: string,
+  region: string,
+  userPoolId: string
+): Promise<DecodedAccessToken> {
+  const issuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
+
+  const client = jwksRsa({ jwksUri: `${issuer}/.well-known/jwks.json` });
+
+  const getSigningKey = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const decodedHeader = jwt.decode(token, { complete: true }) as { header: jwt.JwtHeader };
+      if (!decodedHeader || !decodedHeader.header.kid) {
+        return reject(new Error('Invalid token header (no kid)'));
+      }
+
+      client.getSigningKey(decodedHeader.header.kid, (err, key) => {
+        if (err || !key) return reject(err || new Error('Signing key not found'));
+        resolve(key.getPublicKey());
+      });
+    });
+  };
+
+  const publicKey = await getSigningKey();
+
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, publicKey, { algorithms: ['RS256'], issuer }, (err, decoded) => {
+      if (err) return reject(new Error(`Invalid token: ${err.message}`));
+
+      const payload = decoded as DecodedAccessToken;
+      if (payload.token_use !== 'access') {
+        return reject(new Error(`Expected access token, got ${payload.token_use}`));
+      }
+
+      resolve(payload);
+    });
+  });
+}
