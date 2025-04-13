@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 export function verifyCognitoToken(config) {
     const userPoolId = config?.userPoolId ?? process.env.COGNITO_USER_POOL_ID;

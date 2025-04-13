@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import jwksRsa from 'jwks-rsa';
 import type { Request, Response, NextFunction } from 'express';
 
